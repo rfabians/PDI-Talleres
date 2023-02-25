@@ -10,8 +10,6 @@ pd.set_option('display.max_rows', None)
 class Banda:
     matriz = []
     nivelesDigitales = []
-    arrayNumpy = []
-    dataframe = []
     nombre = ''
     def __init__(self, rutaArchivoBanda):
         self.name = self.obtenerNombre(rutaArchivoBanda)
@@ -38,7 +36,7 @@ class Banda:
         self.arrayNP = np.array(self.matriz)
         self.dataframe =  pd.DataFrame(self.arrayNP)
         plt.figure(figsize=(10, 10))
-        sb.set_palette(palette='gist_gray')
+        sb.set_palette(palette='Greys')
         return sb.heatmap(self.dataframe, square=True, annot=True, xticklabels=[], yticklabels=[],fmt='g', vmin=0, vmax=255)
         
     def histograma(self):
@@ -205,3 +203,45 @@ class EstadisticaMultiBanda:
         matrizColleracion.index = nombresBandas
         matrizColleracion.columns = nombresBandas
         return matrizColleracion
+    
+class ExpansionLineal(Banda):
+    banda:Banda = None
+    porcentajeMinMax = []
+    
+    def __init__(self, banda:Banda, porcentajeMinMax):
+        self.banda = banda
+        self.porcentajeMinMax = porcentajeMinMax
+    
+    def calcularNivelVisual(self, minimo, maximo, nd):
+        if nd >= maximo:
+            return 255
+        elif nd <= minimo:
+            return 0
+        else:
+            return m.trunc((255/(maximo-minimo))*(nd-minimo))
+
+    def reclasificacionValores(self):
+        nivelDigitalMin = self.banda.intervalos([self.porcentajeMinMax, 100-self.porcentajeMinMax])
+        nivelesMinimosMaximos = nivelDigitalMin.to_dict()
+        minimo = nivelesMinimosMaximos[str(self.porcentajeMinMax)+'%']['ND']
+        maximo = nivelesMinimosMaximos[str(100-self.porcentajeMinMax)+'%']['ND']
+        tablaFrecuencias = self.banda.tablaFrecuentas()
+        tablaFrecuencias['NV'] = None
+        for index, row in tablaFrecuencias.iterrows():
+            print(index)
+            tablaFrecuencias.loc[index,'NV'] = self.calcularNivelVisual(minimo, maximo, row['ND'])
+        return tablaFrecuencias
+    
+    def getStrechMatriz(self, banda:Banda):
+        bandaA = banda
+        valoresReclasificados = self.reclasificacionValores()
+        nuevosNivelesDigitales = []
+        for index, row in valoresReclasificados.iterrows():
+            nuevosNivelesDigitales.append(row['NV'])
+        contador = 0
+        for fila in range(len(bandaA.matriz)):
+            for columna in range(len(bandaA.matriz[fila])):
+                bandaA.matriz[fila][columna] = nuevosNivelesDigitales[contador]
+                contador = contador+1
+        print(banda.matriz)
+
