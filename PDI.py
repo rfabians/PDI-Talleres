@@ -235,8 +235,7 @@ class ExpansionLineal(Banda):
             data=self.reclasificacionValores(),
             x="ND",
             y="NV",
-            palette="ch:r=-.2,d=.3_r",
-            kind="line"
+            palette="ch:r=-.2,d=.3_r"
         )
 
     def getStrechBanda(self, banda:Banda):
@@ -255,3 +254,92 @@ class ExpansionLineal(Banda):
         for nivelDigital in range(len(bandaVisual.nivelesDigitales)):
             bandaVisual.nivelesDigitales[nivelDigital] = self.calcularNivelVisualExpansionLineal(minimo, maximo, bandaVisual.nivelesDigitales[nivelDigital])
         return bandaVisual
+
+
+class EcualizacionHistograma:
+    banda:Banda = None
+    bitsImagen: 8
+    
+    def __init__(self, banda:Banda, bitsImagen):
+        self.banda = banda
+        self.bitsImagen = bitsImagen
+
+    def calculaNivelVisual(self, fAcumualada):
+        nvCalculado = int(fAcumualada/(100/(m.pow(2,self.bitsImagen))))-1
+        if nvCalculado < 0:
+            return 0
+        else:
+            return nvCalculado
+    
+    def getTablaFrecuencias(self):
+        tablaFrecuencias = self.banda.tablaFrecuentas()
+        frecuenciaRelativa = tablaFrecuencias[['ND','f']]
+        listaFrecuencias = frecuenciaRelativa.values.tolist()
+        listadoNivelesDigitales = list(range(int(m.pow(2,self.bitsImagen))))
+        nivelDigitales = []
+        for fila in listaFrecuencias:
+            nivelDigitales.append(fila[0])
+        for nivel in listadoNivelesDigitales:
+            if nivel not in nivelDigitales:
+                listaFrecuencias.append([nivel,0])
+        nuevoListadoFrecuencias = pd.DataFrame(np.array(listaFrecuencias))
+        nuevoListadoFrecuencias.sort_values(by=[0],inplace=True)
+        nuevoListadoFrecuencias = nuevoListadoFrecuencias.rename({0: 'ND',1: 'f'}, axis='columns')
+        nuevoListadoFrecuencias = nuevoListadoFrecuencias.reset_index(drop=True)
+
+        for index, row in nuevoListadoFrecuencias.iterrows():
+            nuevoListadoFrecuencias.loc[index,'f(Porc)'] = (row['f']/len(listadoNivelesDigitales))*100
+        
+        nuevoListadoFrecuencias['F'] = 0
+        nuevoListadoFrecuencias['F(Porc)'] = 0.0
+        nuevoListadoFrecuencias['F(Obj)'] = 0.0
+        nuevoListadoFrecuencias['NV'] = 0
+
+        for index, row in nuevoListadoFrecuencias.iterrows():
+            if index == 0:
+                nuevoListadoFrecuencias.loc[index,'F(Obj)'] = 100*(index+1)/len(listadoNivelesDigitales)
+                nuevoListadoFrecuencias.loc[index,'F'] =row['f']
+            else:
+                nuevoListadoFrecuencias.loc[index,'F(Obj)'] = 100*(index+1)/len(listadoNivelesDigitales)
+                nuevoListadoFrecuencias.loc[index,'F'] = row['f'] + nuevoListadoFrecuencias.iloc[index-1]['F']
+            
+        for index, row in nuevoListadoFrecuencias.iterrows():
+            nuevoListadoFrecuencias.loc[index,'F(Porc)'] = (row['F']/len(self.banda.nivelesDigitales))*100
+        for index, row in nuevoListadoFrecuencias.iterrows():
+            nuevoListadoFrecuencias.loc[index,'NV'] = self.calculaNivelVisual(row['F(Porc)'])
+        return nuevoListadoFrecuencias
+    
+    def graficaNivelDigitalVisual(self):
+        return sb.relplot(
+            data=self.getTablaFrecuencias(),
+            x="ND",
+            y="NV",
+            palette="ch:r=-.2,d=.3_r"
+        )
+
+    def getGraficaMatriz(self):
+        matriz = self.banda.matriz
+        tablaFrecuencias = self.getTablaFrecuencias().query('f > 0')
+        nivelesVisuales = tablaFrecuencias[['ND','NV']].values.tolist()
+        contador = 0
+        for fila in range(len(matriz)):
+            for columna in range(len(matriz[fila])):
+                for niveles in nivelesVisuales:
+                    if matriz[fila][columna] == niveles[0]:
+                        matriz[fila][columna] = niveles[1]
+                contador = contador +1
+        self.arrayNP = np.array(matriz)
+        self.dataframe =  pd.DataFrame(self.arrayNP)
+        self.banda.matriz = matriz
+        plt.figure(figsize=(10, 10))
+        return sb.heatmap(self.dataframe, square=True, annot=True, xticklabels=[], yticklabels=[],fmt='g', vmin=0, vmax=255)
+
+    def getHistograma(self):
+        nivelesVisuales = []
+        for fila in range(len(self.banda.matriz)):
+            for columna in range(len(self.banda.matriz[fila])):
+                nivelesVisuales.append(self.banda.matriz[fila][columna])
+        histograma = sb.displot(data=pd.DataFrame(np.array(nivelesVisuales)), binwidth=1, legend=False, facet_kws={'xlim':(0, 255)}, palette='mako')
+        histograma.set(ylabel=None)
+        histograma.set(title='Histograma Ecualización Histograma')
+
