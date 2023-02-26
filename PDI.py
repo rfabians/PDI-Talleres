@@ -36,7 +36,6 @@ class Banda:
         self.arrayNP = np.array(self.matriz)
         self.dataframe =  pd.DataFrame(self.arrayNP)
         plt.figure(figsize=(10, 10))
-        sb.set_palette(palette='Greys')
         return sb.heatmap(self.dataframe, square=True, annot=True, xticklabels=[], yticklabels=[],fmt='g', vmin=0, vmax=255)
         
     def histograma(self):
@@ -212,7 +211,7 @@ class ExpansionLineal(Banda):
         self.banda = banda
         self.porcentajeMinMax = porcentajeMinMax
     
-    def calcularNivelVisual(self, minimo, maximo, nd):
+    def calcularNivelVisualExpansionLineal(self, minimo, maximo, nd):
         if nd >= maximo:
             return 255
         elif nd <= minimo:
@@ -228,20 +227,31 @@ class ExpansionLineal(Banda):
         tablaFrecuencias = self.banda.tablaFrecuentas()
         tablaFrecuencias['NV'] = None
         for index, row in tablaFrecuencias.iterrows():
-            print(index)
-            tablaFrecuencias.loc[index,'NV'] = self.calcularNivelVisual(minimo, maximo, row['ND'])
+            tablaFrecuencias.loc[index,'NV'] = self.calcularNivelVisualExpansionLineal(minimo, maximo, row['ND'])
         return tablaFrecuencias
     
-    def getStrechMatriz(self, banda:Banda):
-        bandaA = banda
-        valoresReclasificados = self.reclasificacionValores()
-        nuevosNivelesDigitales = []
-        for index, row in valoresReclasificados.iterrows():
-            nuevosNivelesDigitales.append(row['NV'])
-        contador = 0
-        for fila in range(len(bandaA.matriz)):
-            for columna in range(len(bandaA.matriz[fila])):
-                bandaA.matriz[fila][columna] = nuevosNivelesDigitales[contador]
-                contador = contador+1
-        print(banda.matriz)
+    def graficaNivelDigitalVisual(self):
+        return sb.relplot(
+            data=self.reclasificacionValores(),
+            x="ND",
+            y="NV",
+            palette="ch:r=-.2,d=.3_r",
+            kind="line"
+        )
 
+    def getStrechBanda(self, banda:Banda):
+        bandaVisual  = banda
+        matrizNivelVisual = bandaVisual.matriz 
+        nivelDigitalMin = self.banda.intervalos([self.porcentajeMinMax, 100-self.porcentajeMinMax])
+        nivelesMinimosMaximos = nivelDigitalMin.to_dict()
+        minimo = nivelesMinimosMaximos[str(self.porcentajeMinMax)+'%']['ND']
+        maximo = nivelesMinimosMaximos[str(100-self.porcentajeMinMax)+'%']['ND']
+        
+        for fila in range(len(matrizNivelVisual)):
+            for columna in range(len(matrizNivelVisual[fila])):
+                matrizNivelVisual[fila][columna] = self.calcularNivelVisualExpansionLineal(minimo, maximo, matrizNivelVisual[fila][columna])
+        bandaVisual.matriz = matrizNivelVisual
+
+        for nivelDigital in range(len(bandaVisual.nivelesDigitales)):
+            bandaVisual.nivelesDigitales[nivelDigital] = self.calcularNivelVisualExpansionLineal(minimo, maximo, bandaVisual.nivelesDigitales[nivelDigital])
+        return bandaVisual
