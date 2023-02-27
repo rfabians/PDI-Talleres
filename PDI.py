@@ -102,7 +102,7 @@ class Banda:
         for intervalo in listadoIntervalos:
             nivelesDiscriminados = tablaFrecuencias.query('FP >= @intervalo')
             nivelDigital = nivelesDiscriminados.iloc[0]['ND']
-            resultados[str(intervalo)+'%'] = [int(nivelDigital)]
+            resultados[str(intervalo)+'%'] = [nivelDigital]
         tablaIntervalos = pd.DataFrame().from_dict(resultados)
         tablaIntervalos.index = ['ND']
         return tablaIntervalos
@@ -343,3 +343,65 @@ class EcualizacionHistograma:
         histograma.set(ylabel=None)
         histograma.set(title='Histograma Ecualización Histograma')
 
+class Filtros:
+    bandaOriginal:Banda = Banda
+    bandaExpandida:Banda = Banda
+    bandaResultante:Banda = Banda
+    
+    def __init__(self, bandaOriginal):
+        self.bandaOriginal = bandaOriginal
+        self.bandaExpandida = bandaOriginal
+        self.bandaResultante = bandaOriginal
+
+
+    def expandirMatriz(self):
+        banda = self.bandaOriginal.matriz
+        bandaExpandida = []
+        for fila in banda:
+            fila.insert(0,fila[0])
+            fila.append(fila[len(fila)-1])
+            bandaExpandida.append(fila)
+        bandaExpandida.insert(0,banda[0])
+        bandaExpandida.append(banda[len(banda)-1])
+        self.bandaExpandida.matriz = bandaExpandida
+    
+    def filtrarIntermedio(self, filtro):
+        matrizExpandidaData = self.bandaExpandida.matriz.copy()
+        matrizAuxiliar = []
+        filtroSuma = 0
+
+        for fila in range(len(filtro)):
+            for columna in range(len(filtro[fila])):
+                filtroSuma = filtroSuma + filtro[fila][columna]
+        
+
+        for fila in range(len(matrizExpandidaData)):
+            filaData = []
+            for columna in range(len(matrizExpandidaData[0])):
+                if fila == 0 or fila == len(matrizExpandidaData)-1 or columna==0 or columna == len(matrizExpandidaData[0])-1:
+                    pass
+                else:
+                    filaData.append(
+                        round((
+                        filtro[0][0]*matrizExpandidaData[fila-1][columna-1]+\
+                        filtro[0][1]*matrizExpandidaData[fila-1][columna]+\
+                        filtro[0][2]*matrizExpandidaData[fila-1][columna+1]+\
+                        filtro[1][0]*matrizExpandidaData[fila][columna-1]+\
+                        filtro[1][1]*matrizExpandidaData[fila][columna]+\
+                        filtro[1][2]*matrizExpandidaData[fila][columna+1]+\
+                        filtro[2][0]*matrizExpandidaData[fila+1][columna-1]+\
+                        filtro[2][1]*matrizExpandidaData[fila+1][columna]+\
+                        filtro[2][2]*matrizExpandidaData[fila+1][columna+1]
+                        )/filtroSuma,2)
+                    )
+            matrizAuxiliar.append(filaData)
+        matrizAuxiliar.remove(matrizAuxiliar[0])
+        matrizAuxiliar.remove(matrizAuxiliar[len(matrizAuxiliar)-1])
+        matrizIntermediaDF = pd.DataFrame(np.array(matrizAuxiliar))
+        self.bandaResultante.matriz = matrizAuxiliar
+        nivDigitalesResultante = []
+        for fila in range(len(matrizAuxiliar)):
+            for columna in range(len(matrizAuxiliar[0])):
+                nivDigitalesResultante.append(matrizAuxiliar[fila][columna])
+        self.bandaResultante.nivelesDigitales = nivDigitalesResultante
+        return matrizIntermediaDF
