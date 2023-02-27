@@ -254,6 +254,15 @@ class ExpansionLineal(Banda):
         for nivelDigital in range(len(bandaVisual.nivelesDigitales)):
             bandaVisual.nivelesDigitales[nivelDigital] = self.calcularNivelVisualExpansionLineal(minimo, maximo, bandaVisual.nivelesDigitales[nivelDigital])
         return bandaVisual
+    
+    def getHistograma(self):
+        nivelesVisuales = []
+        for fila in range(len(self.banda.matriz)):
+            for columna in range(len(self.banda.matriz[fila])):
+                nivelesVisuales.append(self.banda.matriz[fila][columna])
+        histograma = sb.displot(data=pd.DataFrame(np.array(nivelesVisuales)), binwidth=1, legend=False, facet_kws={'xlim':(0, 255)}, palette='mako')
+        histograma.set(ylabel=None)
+        histograma.set(title='Expansión Lineal Histograma')
 
 
 class EcualizacionHistograma:
