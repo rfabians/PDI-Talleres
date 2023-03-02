@@ -434,12 +434,6 @@ class ComponentesPrincipales:
 
     def impresionLatexCreacionMatrizVarianzaCovarianza(self):
         listadoBandas = self.listadoBandas
-        cabecera = rf'''\documentclass{{article}}
-                \usepackage[utf8]{{inputenc}}
-                \usepackage{{amsmath}}
-                \begin{{document}}
-                '''
-        latex = ''
         for fila in range(len(listadoBandas[0].matriz)):
             for columna in range(len(listadoBandas[0].matriz[fila])):
                 filaColumna = '{Pixel :'+str(fila+1)+','+str(columna+1)+'}'
@@ -489,4 +483,32 @@ class ComponentesPrincipales:
                 \\
                 '''
                 display(Math(latexMaultiplicacion))
+    
+    def MatrizCovarianza(self):
+        bandas = []
+        nombres = []
+        for banda in self.listadoBandas:
+            bandas.append(banda.nivelesDigitales)
+            nombres.append(banda.getNombre())
+        dataframeCovarianza = pd.DataFrame(np.array(bandas))
+        transponer = dataframeCovarianza.transpose()
+        transponer.columns = nombres
+        mat_covarianza = transponer.cov()
+        return mat_covarianza
+
+    def ValoresPropios(self):
+        mat_covarianza =  self.MatrizCovarianza()
+        npMatCovarianza = mat_covarianza.to_numpy()
+        valoresPropios, vectoresPropios = np.linalg.eig(npMatCovarianza)
+        return valoresPropios
+    
+    def PoligonomioCaracteristico(self):
+        mat_covarianza =  self.MatrizCovarianza()
+        npMatCovarianza = mat_covarianza.to_numpy()
+        polinomio = np.poly(npMatCovarianza)
+        coeficientesPoligono = []
+        for coeficiente in polinomio:
+            coeficientesPoligono.append(round(coeficiente,4))
+        latexPolinomio = rf'\begin{{align}}{coeficientesPoligono[0]}\lambda^{{4}}+{coeficientesPoligono[1]}\lambda^{{3}}+{coeficientesPoligono[2]}\lambda^{{2}}+{coeficientesPoligono[3]}\lambda+{coeficientesPoligono[4]}\end{{align}}'
+        display(Math(latexPolinomio))
     
