@@ -3,7 +3,7 @@ import numpy as np
 import seaborn as sb
 import matplotlib.pyplot as plt
 import math as m
-
+from IPython.display import display, Math
 
 pd.set_option('display.max_rows', None)
 
@@ -432,5 +432,61 @@ class ComponentesPrincipales:
         return tablaBandasMedias
 
 
-    def construccionMatrizVarianzaCovarianza(self):
-        pass
+    def impresionLatexCreacionMatrizVarianzaCovarianza(self):
+        listadoBandas = self.listadoBandas
+        cabecera = rf'''\documentclass{{article}}
+                \usepackage[utf8]{{inputenc}}
+                \usepackage{{amsmath}}
+                \begin{{document}}
+                '''
+        latex = ''
+        for fila in range(len(listadoBandas[0].matriz)):
+            for columna in range(len(listadoBandas[0].matriz[fila])):
+                filaColumna = '{Pixel :'+str(fila+1)+','+str(columna+1)+'}'
+                a11 = round((listadoBandas[0].matriz[fila][columna]-listadoBandas[0].media())*(listadoBandas[0].matriz[fila][columna]-listadoBandas[0].media()),3)
+                a12 = round((listadoBandas[1].matriz[fila][columna]-listadoBandas[1].media())*(listadoBandas[0].matriz[fila][columna]-listadoBandas[0].media()),3)
+                a13 = round((listadoBandas[2].matriz[fila][columna]-listadoBandas[2].media())*(listadoBandas[0].matriz[fila][columna]-listadoBandas[0].media()),3)
+                a14 = round((listadoBandas[3].matriz[fila][columna]-listadoBandas[3].media())*(listadoBandas[0].matriz[fila][columna]-listadoBandas[0].media()),3)
+                a21 = round((listadoBandas[0].matriz[fila][columna]-listadoBandas[0].media())*(listadoBandas[1].matriz[fila][columna]-listadoBandas[1].media()),3)
+                a22 = round((listadoBandas[1].matriz[fila][columna]-listadoBandas[1].media())*(listadoBandas[1].matriz[fila][columna]-listadoBandas[1].media()),3)
+                a23 = round((listadoBandas[2].matriz[fila][columna]-listadoBandas[2].media())*(listadoBandas[1].matriz[fila][columna]-listadoBandas[1].media()),3)
+                a24 = round((listadoBandas[3].matriz[fila][columna]-listadoBandas[3].media())*(listadoBandas[1].matriz[fila][columna]-listadoBandas[1].media()),3)
+                a31 = round((listadoBandas[0].matriz[fila][columna]-listadoBandas[0].media())*(listadoBandas[2].matriz[fila][columna]-listadoBandas[2].media()),3)
+                a32 = round((listadoBandas[1].matriz[fila][columna]-listadoBandas[1].media())*(listadoBandas[2].matriz[fila][columna]-listadoBandas[2].media()),3)
+                a33 = round((listadoBandas[2].matriz[fila][columna]-listadoBandas[2].media())*(listadoBandas[2].matriz[fila][columna]-listadoBandas[2].media()),3)
+                a34 = round((listadoBandas[3].matriz[fila][columna]-listadoBandas[3].media())*(listadoBandas[2].matriz[fila][columna]-listadoBandas[2].media()),3)
+                a41 = round((listadoBandas[0].matriz[fila][columna]-listadoBandas[0].media())*(listadoBandas[3].matriz[fila][columna]-listadoBandas[0].media()),3)
+                a42 = round((listadoBandas[1].matriz[fila][columna]-listadoBandas[1].media())*(listadoBandas[3].matriz[fila][columna]-listadoBandas[0].media()),3)
+                a43 = round((listadoBandas[2].matriz[fila][columna]-listadoBandas[2].media())*(listadoBandas[3].matriz[fila][columna]-listadoBandas[0].media()),3)
+                a44 = round((listadoBandas[3].matriz[fila][columna]-listadoBandas[3].media())*(listadoBandas[3].matriz[fila][columna]-listadoBandas[0].media()),3)
+                latexMaultiplicacion = rf'''             
+                \mathbf{filaColumna}
+                \left ( \begin{{pmatrix}}
+                {listadoBandas[0].matriz[fila][columna]}
+                \\ {listadoBandas[1].matriz[fila][columna]}
+                \\ {listadoBandas[2].matriz[fila][columna]}
+                \\ {listadoBandas[3].matriz[fila][columna]}
+                \end{{pmatrix}}
+                -
+                \begin{{pmatrix}}
+                {round(listadoBandas[0].media(),3)}
+                \\ {round(listadoBandas[1].media(),3)}
+                \\ {round(listadoBandas[2].media(),3)}
+                \\ {round(listadoBandas[3].media(),3)}
+                \\ 
+                \end{{pmatrix}}
+                \right )
+
+                \begin{{pmatrix}}
+                 {round(listadoBandas[0].matriz[fila][columna]-listadoBandas[0].media(),3)}& {round(listadoBandas[1].matriz[fila][columna]-listadoBandas[1].media(),3)} & {round(listadoBandas[2].matriz[fila][columna]-listadoBandas[2].media(),3)} & {round(listadoBandas[3].matriz[fila][columna]-listadoBandas[3].media(),3)}
+                \end{{pmatrix}}
+                = \begin{{pmatrix}}
+                {a11} & {a12} & {a13} & {a14}\\ 
+                {a21} & {a22} & {a23} & {a24}\\ 
+                {a31} & {a32} & {a33} & {a34}\\ 
+                {a41} & {a42} & {a34} & {a44}
+                \end{{pmatrix}}
+                \\
+                '''
+                display(Math(latexMaultiplicacion))
+    

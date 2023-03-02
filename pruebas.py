@@ -16,3 +16,4 @@ if __name__ == '__main__':
 
     componentesPrincipales = PDI.ComponentesPrincipales(listadoBandas=listadobandas)
     print(componentesPrincipales.getPromediosBandas())
+    print(componentesPrincipales.impresionLatexCreacionMatrizVarianzaCovarianza())
