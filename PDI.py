@@ -4,6 +4,8 @@ import seaborn as sb
 import matplotlib.pyplot as plt
 import math as m
 from IPython.display import display, Math
+import array_to_latex as a2l 
+
 
 pd.set_option('display.max_rows', None)
 
@@ -450,9 +452,9 @@ class ComponentesPrincipales:
                 a33 = round((listadoBandas[2].matriz[fila][columna]-listadoBandas[2].media())*(listadoBandas[2].matriz[fila][columna]-listadoBandas[2].media()),3)
                 a34 = round((listadoBandas[3].matriz[fila][columna]-listadoBandas[3].media())*(listadoBandas[2].matriz[fila][columna]-listadoBandas[2].media()),3)
                 a41 = round((listadoBandas[0].matriz[fila][columna]-listadoBandas[0].media())*(listadoBandas[3].matriz[fila][columna]-listadoBandas[0].media()),3)
-                a42 = round((listadoBandas[1].matriz[fila][columna]-listadoBandas[1].media())*(listadoBandas[3].matriz[fila][columna]-listadoBandas[0].media()),3)
-                a43 = round((listadoBandas[2].matriz[fila][columna]-listadoBandas[2].media())*(listadoBandas[3].matriz[fila][columna]-listadoBandas[0].media()),3)
-                a44 = round((listadoBandas[3].matriz[fila][columna]-listadoBandas[3].media())*(listadoBandas[3].matriz[fila][columna]-listadoBandas[0].media()),3)
+                a42 = round((listadoBandas[1].matriz[fila][columna]-listadoBandas[1].media())*(listadoBandas[3].matriz[fila][columna]-listadoBandas[1].media()),3)
+                a43 = round((listadoBandas[2].matriz[fila][columna]-listadoBandas[2].media())*(listadoBandas[3].matriz[fila][columna]-listadoBandas[2].media()),3)
+                a44 = round((listadoBandas[3].matriz[fila][columna]-listadoBandas[3].media())*(listadoBandas[3].matriz[fila][columna]-listadoBandas[3].media()),3)
                 latexMaultiplicacion = rf'''             
                 \mathbf{filaColumna}
                 \left ( \begin{{pmatrix}}
@@ -496,12 +498,17 @@ class ComponentesPrincipales:
         mat_covarianza = transponer.cov()
         return mat_covarianza
 
-    def ValoresPropios(self):
+    def ValoresVectoresPropios(self):
         mat_covarianza =  self.MatrizCovarianza()
         npMatCovarianza = mat_covarianza.to_numpy()
         valoresPropios, vectoresPropios = np.linalg.eig(npMatCovarianza)
-        return valoresPropios
-    
+        valoresPropios = np.sort(valoresPropios)[::-1]
+        latexValoresPropios = rf'\begin{{align}}\lambda_{{1}}={valoresPropios[0]}, \lambda_{{2}}={valoresPropios[1]}, \lambda_{{3}}={valoresPropios[2]}, \lambda_{{4}}={valoresPropios[3]}\end{{align}}'
+        display(Math(latexValoresPropios))
+        latex = a2l.to_ltx(vectoresPropios)
+        display(Math(latex))
+
+
     def PoligonomioCaracteristico(self):
         mat_covarianza =  self.MatrizCovarianza()
         npMatCovarianza = mat_covarianza.to_numpy()
