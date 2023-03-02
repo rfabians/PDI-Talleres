@@ -414,3 +414,23 @@ class Filtros:
                 nivDigitalesResultante.append(matrizAuxiliar[fila][columna])
         self.bandaResultante.nivelesDigitales = nivDigitalesResultante
         return matrizIntermediaDF
+    
+class ComponentesPrincipales:
+    listadoBandas:list[Banda] = []
+    def __init__(self, listadoBandas:list[Banda]):
+        self.listadoBandas = listadoBandas
+    
+    def getPromediosBandas(self):
+        nombreBandas = []
+        medias = []
+        for banda in self.listadoBandas:
+            nombreBandas.append(banda.getNombre())
+            medias.append(banda.media())
+        tablaBandasMedias = pd.DataFrame(np.array(medias))
+        tablaBandasMedias.columns = ['Media']
+        tablaBandasMedias.index = nombreBandas
+        return tablaBandasMedias
+
+
+    def construccionMatrizVarianzaCovarianza(self):
+        pass
